@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gcc main.cpp \
+gcc main.c \
 -lSDL2 \
 -o main
 

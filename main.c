@@ -2,7 +2,6 @@
 #include <SDL2/SDL_events.h>
 #include <stdlib.h>
 
-
 // The triangles are currently in the bottom of the screen because of their origin points.
 typedef struct line {
     float x1;
@@ -12,13 +11,13 @@ typedef struct line {
 } Line;
 
 
-constexpr float INCREASE_LINE_BY = 0.015;
+#define INCREASE_LINE_BY 0.015
 
 
 Line* MakeLine(float x1, float y1, float x2, float y2) {
     Line* line = (Line*)malloc(sizeof(Line));
 
-    if (line == nullptr) {
+    if (line == NULL) {
         printf("Not enough memory available.\n");
         exit(1);
     }
@@ -44,7 +43,7 @@ void MakeLineBigger(Line* line) {
     line->x2 += 0.01;
     line->y2 += 0.01;
 }
- 
+
 int main(int argc, char *argv[])
 {
     SDL_Window* window = NULL;
@@ -82,5 +81,5 @@ int main(int argc, char *argv[])
     free(first_line);
     free(second_line);
     free(third_line);
- 
+
 }
