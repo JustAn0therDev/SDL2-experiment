@@ -22,10 +22,10 @@ Line* MakeLine(float x1, float y1, float x2, float y2) {
         exit(1);
     }
 
-    line->x1 = x1 * 5;
-    line->y1 = y1 * 5;
-    line->x2 = x2 * 5;
-    line->y2 = y2 * 5;
+    line->x1 = x1 * 4;
+    line->y1 = y1 * 4;
+    line->x2 = x2 * 4;
+    line->y2 = y2 * 4;
 
     return line;
 }
@@ -61,9 +61,15 @@ int main(int argc, char *argv[])
             SDL_Event event;
 
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            // This is probably called here because the background stays in the same color while the rest of the render can be done in a different color after a cleanup.
+
+            // Tested and correct. It is the same draw call with a different color.
+            // If this works this way, it looks pretty easy to manage. Just make sure to do two things:
+            // 1 - Create a good API on top of this one to make the use "less stateful"; and
+            // 2 - And manage the resources accordingly so there are no memory leaks or performance issues when porting the program to other platforms.
             SDL_RenderClear(renderer);
 
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderDrawLine(renderer, first_line->x1, first_line->y1, first_line->x2, first_line->y2);
             SDL_RenderDrawLine(renderer, second_line->x1, second_line->y1, second_line->x2, second_line->y2);
             SDL_RenderDrawLine(renderer, third_line->x1, third_line->y1, third_line->x2, third_line->y2);
