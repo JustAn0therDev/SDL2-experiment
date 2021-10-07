@@ -52,6 +52,7 @@ void MakeLineBigger(Line* line) {
 }
 
 
+// TODO: Have this be a linked list with 'const char*'s in it.
 void InitKeysInMap(std::map<SDL_Keycode, const char*>& keys) {
     keys[SDLK_a] = "a";
     keys[SDLK_b] = "b";
