@@ -14,9 +14,6 @@ typedef struct line {
 
 
 #define INCREASE_LINE_BY 0.015
-#define TEXT_LIMIT 1024
-
-int current_char = 0;
 
 
 Line* MakeLine(float x1, float y1, float x2, float y2) {
@@ -60,8 +57,8 @@ int main()
     SDL_Rect rect;
     rect.h = 200;
     rect.w = 200;
-    rect.x = 1920 / 2;
-    rect.y = 1080 / 2;
+    rect.x = 1920 / 4;
+    rect.y = 1080 / 4;
 
     SDL_SetTextInputRect(&rect);
     SDL_StartTextInput();
@@ -70,9 +67,9 @@ int main()
     Line* second_line = MakeLine(300, 240, 340, 240);
     Line* third_line = MakeLine(340, 240, 320, 200);
 
-    SDL_Color White = {255, 255, 255};
+    SDL_Color White = { 255, 255, 255 };
 
-    char *text = "TYPE HERE";
+    char *text = "?";
 
     if (SDL_CreateWindowAndRenderer(1920, 1080, 0, &window, &renderer) == 0) {
 
