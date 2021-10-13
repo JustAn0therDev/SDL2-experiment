@@ -10,7 +10,8 @@ typedef struct keyMap {
 } KeyMap;
 
 typedef struct rendered_chars {
-    struct chars_on_screen* next;
+    struct rendered_chars* previous;
+    struct rendered_chars* next;
     char* currentChar;
 } RenderedChars;
 
@@ -32,6 +33,7 @@ int main()
 
     KeyMap* keys = GetKeyMapLinkedList();
     RenderedChars *chars = (RenderedChars*)malloc(sizeof(RenderedChars));
+    RenderedChars *last_char_rendered = chars;
     
     TTF_Init();
     TTF_Font* openSans = TTF_OpenFont("OpenSans-Regular.ttf", FONT_SIZE);
@@ -45,7 +47,7 @@ int main()
     SDL_SetTextInputRect(&rect);
     SDL_StartTextInput();
     
-    SDL_Color Black = { 0, 0, 0 };
+    SDL_Color White = { 255, 255, 255 };
     
     char* text = (char*)malloc(sizeof(char) * TEXT_SIZE);
     
@@ -59,10 +61,10 @@ int main()
             
             SDL_Event event;
             
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
             
-            SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(openSans, text, Black, 200);
+            SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(openSans, text, White, 500);
             
             SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
             
@@ -91,7 +93,13 @@ int main()
 
                     } else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
 
-                        // TODO: Remove the last item in the linked list of rendered characters.
+                        if (last_char_rendered != NULL) {
+
+                            RenderedChars* tmp = last_char_rendered->previous;
+                            free(last_char_rendered);
+                            chars = tmp;
+
+                        }
 
                     } else {
             
@@ -100,6 +108,13 @@ int main()
                         if (possible_key != NULL) {
             
                             text = strcat(text, possible_key->character);
+
+                            chars->currentChar = (char*)possible_key->character;
+                            chars->next = (RenderedChars*)malloc(sizeof(RenderedChars));
+                            chars->previous = last_char_rendered;
+
+                            last_char_rendered = chars;
+
                             rect.w += FONT_SIZE / 2;
             
                         }
@@ -126,12 +141,13 @@ KeyMap* GetKeyMapLinkedList() {
 
     KeyMap* tmp;
 
-    // NOTES(Ruan): These do not have the "a" in them because they are already manually added to the first key pointer.
     const char* possible_characters[26] = {"b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "."};
     SDL_Keycode possible_key_codes[26] = { SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z, SDLK_PERIOD };
 
     KeyMap *firstKey = (KeyMap*)malloc(sizeof(KeyMap));
 
+    // The first pointer is defined as the "a" and "SDLK_a", so that the next items on the list
+    // have the subsequent characters attached to them.
     firstKey->character = "a";
     firstKey->key_code = SDLK_a;
     firstKey->nextKeyMap = (KeyMap*)malloc(sizeof(KeyMap));
