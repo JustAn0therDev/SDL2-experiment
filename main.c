@@ -9,49 +9,20 @@ typedef struct keyMap {
     const char* character;
 } KeyMap;
 
-KeyMap* GetPointerToKeyCode(KeyMap* keys, SDL_Keycode *key_code);
+typedef struct rendered_chars {
+    struct chars_on_screen* next;
+    char* currentChar;
+} RenderedChars;
+
+KeyMap* GetKeyMapLinkedList();
+KeyMap* GetPointerToKeyCodeInLinkedList(KeyMap* keys, SDL_Keycode *key_code);
 
 const float INCREASE_LINE_BY = 0.015;
 const int TEXT_SIZE = 2048;
 const int FONT_SIZE = 48;
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
-const int POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT = 27;
-
-KeyMap* InitKeysInMap() {
-
-    KeyMap* tmp;
-
-    // These do not have the "a" in them because they are already manually added to the first key pointer.
-    const char* possible_characters[26] = {"b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "."};
-    SDL_Keycode possible_key_codes[26] = { SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z, SDLK_PERIOD };
-
-    KeyMap *firstKey = (KeyMap*)malloc(sizeof(KeyMap));
-
-    firstKey->character = "a";
-    firstKey->key_code = SDLK_a;
-    firstKey->nextKeyMap = (KeyMap*)malloc(sizeof(KeyMap));
-
-    tmp = firstKey->nextKeyMap;
-
-    for (int i = 1; i < POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT; i++) {
-
-        if (tmp == NULL) {
-            tmp = (KeyMap*)malloc(sizeof(KeyMap));
-        }
-
-        tmp->character = possible_characters[i];
-        tmp->key_code = possible_key_codes[i];
-        tmp->nextKeyMap = (KeyMap*)malloc(sizeof(KeyMap));
-
-        tmp = tmp->nextKeyMap;
-
-    }
-
-    return firstKey;
-
-}
-
+const int POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT = 26;
 
 int main()
 {
@@ -59,7 +30,8 @@ int main()
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
 
-    KeyMap* keys = InitKeysInMap();
+    KeyMap* keys = GetKeyMapLinkedList();
+    RenderedChars *chars = (RenderedChars*)malloc(sizeof(RenderedChars));
     
     TTF_Init();
     TTF_Font* openSans = TTF_OpenFont("OpenSans-Regular.ttf", FONT_SIZE);
@@ -116,11 +88,14 @@ int main()
                     if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
             
                         text = strcat(text, " ");
-            
+
+                    } else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
+
+                        // TODO: Remove the last item in the linked list of rendered characters.
+
                     } else {
             
-                        // TODO(Ruan): Changing this to check a function that returns a pointer to the thing we want.
-                        KeyMap* possible_key = GetPointerToKeyCode(keys, &event.key.keysym.sym);
+                        KeyMap* possible_key = GetPointerToKeyCodeInLinkedList(keys, &event.key.keysym.sym);
 
                         if (possible_key != NULL) {
             
@@ -147,14 +122,47 @@ int main()
 
 }
 
-KeyMap* GetPointerToKeyCode(KeyMap* keys, SDL_Keycode *key_code) {
+KeyMap* GetKeyMapLinkedList() {
+
+    KeyMap* tmp;
+
+    // NOTES(Ruan): These do not have the "a" in them because they are already manually added to the first key pointer.
+    const char* possible_characters[26] = {"b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "."};
+    SDL_Keycode possible_key_codes[26] = { SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z, SDLK_PERIOD };
+
+    KeyMap *firstKey = (KeyMap*)malloc(sizeof(KeyMap));
+
+    firstKey->character = "a";
+    firstKey->key_code = SDLK_a;
+    firstKey->nextKeyMap = (KeyMap*)malloc(sizeof(KeyMap));
+
+    tmp = firstKey->nextKeyMap;
+
+    for (int i = 1; i < POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT; i++) {
+
+        if (tmp == NULL) {
+            tmp = (KeyMap*)malloc(sizeof(KeyMap));
+        }
+
+        tmp->character = possible_characters[i];
+        tmp->key_code = possible_key_codes[i];
+        tmp->nextKeyMap = (KeyMap*)malloc(sizeof(KeyMap));
+
+        tmp = tmp->nextKeyMap;
+
+    }
+
+    return firstKey;
+
+}
+
+KeyMap* GetPointerToKeyCodeInLinkedList(KeyMap* keys, SDL_Keycode *key_code) {
 
     KeyMap* tmp = keys;
 
     while (tmp != NULL) {
 
         if (tmp->key_code == *key_code) {
-            // return the pointer to the desired key.
             return tmp;
         }
 
@@ -164,3 +172,4 @@ KeyMap* GetPointerToKeyCode(KeyMap* keys, SDL_Keycode *key_code) {
     return NULL;
 
 }
+
