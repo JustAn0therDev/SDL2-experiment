@@ -22,7 +22,7 @@ void AddToRenderedCharList(const char* charTyped, RenderedChars** chars);
 void RemoveLastItemFromCharList(RenderedChars** chars, SDL_Rect* rect);
 
 const float INCREASE_LINE_BY = 0.015;
-const int TEXT_SIZE = 2048;
+const int TEXT_SIZE = 2049;
 const int FONT_SIZE = 48;
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
@@ -50,7 +50,9 @@ int main()
     SDL_StartTextInput();
     
     SDL_Color White = { 255, 255, 255 };
-    
+
+    char* text = (char*)malloc(sizeof(char) * 30);
+
     if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) == 0) {
         
         SDL_bool done = SDL_FALSE;
@@ -66,7 +68,9 @@ int main()
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
 
-            SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(openSans, "INSERT TEXT HERE !!1", White, 500);
+            SetCharsFromRenderedChars(text, first_item_pointer);
+
+            SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(openSans, text, White, 500);
 
             SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
             
@@ -74,9 +78,7 @@ int main()
             SDL_RenderPresent(renderer);
 
             if (surfaceMessage != NULL) {
-
                 surface_message_size = surfaceMessage->h;
-
             }
 
             free(surfaceMessage);
@@ -88,7 +90,6 @@ int main()
                     done = SDL_TRUE;
 
                 } else if (event.key.type == SDL_KEYDOWN) {
-
                     if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
                         AddToRenderedCharList(" ", &chars);
                     } else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
@@ -102,11 +103,12 @@ int main()
                         }
                     }
 
-                    if (surface_message_size != previous_surface_message_size) {
-            
+                    if (surface_message_size > previous_surface_message_size) {
                         previous_surface_message_size = surface_message_size;
                         rect.h += surface_message_size / 2;
-            
+                    } else if (surface_message_size < previous_surface_message_size) {
+                        previous_surface_message_size = surface_message_size;
+                        rect.h -= surface_message_size / 2;
                     }
                 }
             }
@@ -135,7 +137,7 @@ KeyMap* GetKeyMapLinkedList() {
 
     tmp = firstKey->nextKeyMap;
 
-    for (int i = 1; i < POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT; i++) {
+    for (int i = 0; i < POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT; i++) {
 
         if (tmp == NULL) {
             tmp = (KeyMap*)malloc(sizeof(KeyMap));
@@ -171,18 +173,13 @@ KeyMap* GetPointerToKeyCodeInLinkedList(KeyMap* keys, SDL_Keycode *key_code) {
 }
 
 void SetCharsFromRenderedChars(char* text, RenderedChars *first_item_pointer) {
-    // text = (char*)realloc(text, sizeof(char) * 50);
-    text = (char*)malloc(sizeof(char) * 50);
+    memset(text, 0, sizeof(text));
 
     while (first_item_pointer != NULL) {
-
         if (first_item_pointer->currentChar != NULL)
-            printf("%i\n", first_item_pointer->currentChar != NULL);
             text = strcat(text, first_item_pointer->currentChar);
 
-        printf("first_item_pointer = first_item_pointer->next;\n");
         first_item_pointer = first_item_pointer->next;
-
     }
 }
 
