@@ -17,6 +17,7 @@ typedef struct rendered_chars {
 
 KeyMap* GetKeyMapLinkedList();
 KeyMap* GetPointerToKeyCodeInLinkedList(KeyMap* keys, SDL_Keycode *key_code);
+void SetCharsFromRenderedChars(char* text, RenderedChars *first_item_pointer);
 
 const float INCREASE_LINE_BY = 0.015;
 const int TEXT_SIZE = 2048;
@@ -27,14 +28,13 @@ const int POSSIBLE_KEY_CODES_AND_CHARACTERS_LIMIT = 26;
 
 int main()
 {
-
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
 
     KeyMap* keys = GetKeyMapLinkedList();
     RenderedChars *chars = (RenderedChars*)malloc(sizeof(RenderedChars));
-    RenderedChars *last_char_rendered = chars;
-    
+    RenderedChars *first_item_pointer = chars;
+
     TTF_Init();
     TTF_Font* openSans = TTF_OpenFont("OpenSans-Regular.ttf", FONT_SIZE);
     
@@ -49,11 +49,13 @@ int main()
     
     SDL_Color White = { 255, 255, 255 };
     
-    char* text = (char*)malloc(sizeof(char) * TEXT_SIZE);
+    char* text;
     
     if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer) == 0) {
         
         SDL_bool done = SDL_FALSE;
+
+        // These are used to control the size of the rendered characters.
         float surface_message_size = 0;
         float previous_surface_message_size = 0;
         
@@ -63,9 +65,11 @@ int main()
             
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
-            
+
+            SetCharsFromRenderedChars(text, first_item_pointer);
+
             SDL_Surface* surfaceMessage = TTF_RenderText_Blended_Wrapped(openSans, text, White, 500);
-            
+
             SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
             
             SDL_RenderCopy(renderer, Message, NULL, &rect);
@@ -89,31 +93,38 @@ int main()
 
                     if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
             
-                        text = strcat(text, " ");
+                        // TODO: This will do the same normal add operation, except the character " " should always be a fixed const char *.
 
                     } else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
+                        if (chars != NULL) {
+                            RenderedChars* previous = chars->previous;
 
-                        if (last_char_rendered != NULL) {
+                            if (previous != NULL) {
+                                // Making sure we're not freeing invalid memory addresses.
+                                if (chars->currentChar != NULL)
+                                    free(chars->currentChar);
 
-                            RenderedChars* tmp = last_char_rendered->previous;
-                            free(last_char_rendered);
-                            chars = tmp;
-
+                                if (chars != NULL)
+                                    free(chars);
+                                
+                                chars = previous;
+                                rect.w -= FONT_SIZE / 2;
+                            }
                         }
-
                     } else {
             
                         KeyMap* possible_key = GetPointerToKeyCodeInLinkedList(keys, &event.key.keysym.sym);
 
                         if (possible_key != NULL) {
-            
-                            text = strcat(text, possible_key->character);
-
-                            chars->currentChar = (char*)possible_key->character;
+                            // Set the character in the next RenderedChars,
+                            // And set this one as the previous of the next;
                             chars->next = (RenderedChars*)malloc(sizeof(RenderedChars));
-                            chars->previous = last_char_rendered;
+                            chars->next->previous = chars;
+                            chars->next->currentChar = (char*)malloc(sizeof(char) * 2); // 1 + null byte (terminating char).
+                            strcpy(chars->next->currentChar, possible_key->character);
 
-                            last_char_rendered = chars;
+                            // After setting everything up, lets move one item along the linked list.
+                            chars = chars->next;                            
 
                             rect.w += FONT_SIZE / 2;
             
@@ -189,3 +200,16 @@ KeyMap* GetPointerToKeyCodeInLinkedList(KeyMap* keys, SDL_Keycode *key_code) {
 
 }
 
+
+void SetCharsFromRenderedChars(char* text, RenderedChars *first_item_pointer) {
+    text = (char*)realloc(text, sizeof(char) * 50);
+
+    while (first_item_pointer != NULL) {
+
+        if (first_item_pointer->currentChar != NULL)
+            text = strcat(text, first_item_pointer->currentChar);
+
+        first_item_pointer = first_item_pointer->next;
+
+    }
+}
